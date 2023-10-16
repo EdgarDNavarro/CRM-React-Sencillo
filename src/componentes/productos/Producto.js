@@ -1,11 +1,12 @@
-import React from 'react'
+import React, {useContext} from 'react'
 import { Link } from 'react-router-dom'
 import Swal from 'sweetalert2'
 import clientesAxios from '../../config/axios'
-
+import { CRMContext } from '../../context/CRMcontext'
 
 
 function Producto({producto}) {
+    const [auth, guardarAuth] = useContext(CRMContext)
     const eliminarProducto = id => {
         Swal.fire({
             title: '¿Estas seguro?',
@@ -18,7 +19,11 @@ function Producto({producto}) {
             cancelButtonText: 'No, Cancelar'
         }).then((result) => {
             if (result.isConfirmed) {
-                clientesAxios.delete(`/productos/${id}`).then( res => {
+                clientesAxios.delete(`/productos/${id}`, {
+                    headers: {
+                        Authorization: `Bearer ${auth.token}`
+                    }
+                }).then( res => {
                     if(res.status === 200) {
                         Swal.fire(
                             'Eliminado',
@@ -39,7 +44,7 @@ function Producto({producto}) {
                 <p className="nombre">{nombre}</p>
                 <p className="precio">${precio} </p>
                 { imagen ? (
-                    <img src={`http://localhost:5000/${imagen}`} alt='imagen producto'/>
+                    <img className='img' src={`http://localhost:5000/${imagen}`} alt='imagen producto'/>
                 ) : null }
                 
             </div>

@@ -1,12 +1,14 @@
-import React, {Fragment, useState, useEffect} from 'react'
+import React, {Fragment, useState, useEffect, useContext} from 'react'
 import Swal from 'sweetalert2';
 import { useNavigate, useParams } from 'react-router-dom';
 import clientesAxios from '../../config/axios';
+import { CRMContext } from '../../context/CRMcontext';
 
 function EditarProductos() {
     const {id} = useParams();
 
     const navigate = useNavigate();
+    const [auth, guardarAuth] = useContext(CRMContext)
 
     const [producto, guardarProductos] = useState({
         nombre: '',
@@ -17,12 +19,27 @@ function EditarProductos() {
     const [archivo, guardarArchivo] = useState('')
     
     useEffect(() => {
-        const consultarAPI = async () => {
-            const productoConsulta = await clientesAxios.get(`/productos/${id}`)
-            guardarProductos(productoConsulta.data)
+
+        if(auth.token !== '') {
+            const consultarAPI = async () => {
+                try {
+                    const productoConsulta = await clientesAxios.get(`/productos/${id}`, {
+                        headers: {
+                            Authorization: `Bearer ${auth.token}`
+                        }
+                    })
+                    guardarProductos(productoConsulta.data)  
+                } catch (error) {
+                    if(error.response.status = 500) {
+                        navigate('/iniciar-sesion');
+                    }
+                }
+            }
+            consultarAPI()
+        } else {
+            navigate('/iniciar-sesion');
         }
 
-        consultarAPI()
     }, [])
 
     const editarProducto = async e => {
@@ -36,7 +53,8 @@ function EditarProductos() {
         try {
             const res = await clientesAxios.put(`/productos/${id}`, formData, {
                 headers: {
-                    'Content-Type' : 'multipart/form-data'
+                    'Content-Type' : 'multipart/form-data',
+                    Authorization: `Bearer ${auth.token}`
                 }
             });
             
@@ -94,13 +112,13 @@ function EditarProductos() {
                 <div className="campo">
                     <label>Imagen:</label>
                     {imagen ? (
-                        <img src={`http://localhost:5000/${imagen}`} alt='imagen' width="300" />
+                        <img src={`http://localhost:5000/${imagen}`} alt='imagen' width="200" />
                     ): null}
                     <input type="file"  name="imagen" onChange={leerArchivo}/>
                 </div>
 
                 <div className="enviar">
-                        <input type="submit" className="btn btn-azul" value="Agregar Producto" />
+                        <input type="submit" className="btn btn-azul" value="Editar Producto" />
                 </div>
             </form>
         </Fragment>

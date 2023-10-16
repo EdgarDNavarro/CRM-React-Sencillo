@@ -1,55 +1,62 @@
-import React, {useState, useEffect, Fragment, useContext} from 'react'
+import React, {useState, useEffect, Fragment} from 'react'
 import { useParams } from 'react-router-dom';
 import clientesAxios from '../../config/axios';
 import FormBuscarProducto from './FormBuscarProducto';
 import FormCantidadProducto from './FormCantidadProducto';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
-import { CRMContext } from '../../context/CRMcontext';
 
-function NuevoPedido() {
-    const {id} = useParams();
+function EditarPedidos() {
+    const {id, idCliente} = useParams();
 
     const [cliente, guardarCliente] = useState({})
     const [busqueda, guardarBusqueda] = useState('')
     const [productos, guardarProductos] = useState([])
     const [total, guardarTotal] = useState(0)
-    const [auth, guardarAuth] = useContext(CRMContext)
+    const [pedido, guardarPedido] = useState({})
 
     const navigate = useNavigate();
 
     useEffect( () => {
-        if(auth.token !== '') {
-            const consultarAPI = async () => {
-                try {
-                    const resultado = await clientesAxios.get(`/clientes/${id}`, {
-                        headers: {
-                            Authorization: `Bearer ${auth.token}`
-                        }
-                    })
-                    guardarCliente(resultado.data)
-                } catch (error) {
-                    if(error.response.status = 500) {
-                        navigate('/iniciar-sesion');
-                    }
-                }
-            }
-            consultarAPI()
-        } else {
-            navigate('/iniciar-sesion');
+        const consultarPedidoAPI = async () => {
+            const resultado = await clientesAxios.get(`/pedidos/${id}`)
+            
+            guardarPedido(resultado.data)
+
+            const resultadoProductos = resultado.data.pedido
+
+            const productosDelPedido = resultadoProductos.map(objeto => ({
+                ...objeto.producto,
+                producto: objeto._id,
+                cantidad: objeto.cantidad,
+            }));
+
+            guardarProductos(productosDelPedido);
+
         }
 
+        const consultarClienteAPI = async () => {
+            const resultado1 = await clientesAxios.get(`/clientes/${idCliente}`)
+            guardarCliente(resultado1.data)
+            
+
+        }
+
+
+        
         actualizarTotal()
-    }, [productos])
+        consultarClienteAPI()
+        
+        consultarPedidoAPI()
+        
+        
+    }, [])
+
 
     const buscarProductos = async e => {
         e.preventDefault()
 
-        const resultadoBusqueda = await clientesAxios.post(`/productos/busqueda/${busqueda}`, {
-                        headers: {
-                            Authorization: `Bearer ${auth.token}`
-                        }
-                    })
+        const resultadoBusqueda = await clientesAxios.post(`/productos/busqueda/${busqueda}`)
 
         if(resultadoBusqueda.data[0]) {
 
@@ -67,7 +74,6 @@ function NuevoPedido() {
             })
         }
     }
-
     const leerDatosBusqueda = e => {
         guardarBusqueda( e.target.value )
     }
@@ -80,6 +86,7 @@ function NuevoPedido() {
         todosProductos[i].cantidad--;
 
         guardarProductos(todosProductos)
+        actualizarTotal()
     }
 
     const aumentarProducto = i => {
@@ -88,13 +95,18 @@ function NuevoPedido() {
         todosProductos[i].cantidad++;
 
         guardarProductos(todosProductos)
+        actualizarTotal()
     }
 
     const eliminarProducto = id => {
+        
         const todosProductos = productos.filter(producto => producto.producto !== id)
 
         guardarProductos(todosProductos)
+
     }
+
+
 
     //Actualizar el total a pagar
     const actualizarTotal = () => {
@@ -116,36 +128,38 @@ function NuevoPedido() {
 
         //construir objeto
         const pedido = {
-            cliente : id,
+            cliente : idCliente,
             pedido : productos,
             total : total
         }
-        
-        const resultado = await clientesAxios.post(`/pedidos/nuevo/${id}`, pedido, {
-            headers: {
-                Authorization: `Bearer ${auth.token}`
+        try {
+            const resultado = await clientesAxios.put(`/pedidos/${id}`, pedido)
+            if(resultado.status === 200){
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Correcto',
+                    text: resultado.data.mensaje
+                })
+            }else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'No se pudo realizar el Pedido',
+                    text: 'Intente nuevamente'
+                })
             }
-        })
+            navigate('/pedidos');
 
-        if(resultado.status === 200){
-            Swal.fire({
-                icon: 'success',
-                title: 'Correcto',
-                text: resultado.data.mensaje
-            })
-        }else {
-            Swal.fire({
-                icon: 'error',
-                title: 'No se pudo realizar el Pedido',
-                text: 'Intente nuevamente'
-            })
+        } catch (error) {
+            console.log(error)
         }
-        navigate('/pedidos');
+        
+
+
     }
 
-    return(
+    return (
         <Fragment>
-            <h2>Nuevo Pedido</h2>
+            <h2>Editar Pedido</h2>
             <div className="ficha-cliente">
                 <h3>Datos de Cliente</h3>
                 <p>Nombre: {cliente.nombre} {cliente.apellido}</p>
@@ -157,7 +171,7 @@ function NuevoPedido() {
             <ul className="resumen">
                 {productos.map((producto, index) => (
                     <FormCantidadProducto
-                        key={producto.producto}
+                        key={`${producto.producto}-${index}`}
                         producto={producto}
                         restarProducto={restarProducto}
                         aumentarProducto={aumentarProducto}
@@ -169,18 +183,17 @@ function NuevoPedido() {
                 
             </ul>
 
-            <p className='total'>Total a Pagar: <span>$ {total}</span></p>
+            <p className='total'>Total a Pagar: <span>$ {total || pedido.total}</span> </p> 
                 
             { total > 0 ? (
                 <form onSubmit={realizarPedido}>
-                    <input type='submit' className='btn btn-verde btn-block' value='Realizar Pedido'/>
+                    <input type='submit' className='btn btn-verde btn-block' value='Actualizar Pedido'/>
 
                 </form>
             ) : null }
 
         </Fragment>
-
     )
 }
 
-export default NuevoPedido
+export default EditarPedidos

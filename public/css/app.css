@@ -268,6 +268,9 @@ h2 {
     .pedido .acciones a:last-of-type {
         margin-bottom: 0;
     } 
+    .img {
+        max-width: 25rem;
+    }
 }
 .cliente p,
 .producto p,
@@ -311,6 +314,10 @@ h2 {
 }
 .pedido ul li {
     border-top: 1px solid #e1e1e1;
+}
+
+.img {
+    max-width: 20rem;
 }
 
 /** Formularios **/

@@ -1,22 +1,47 @@
-import React, {Fragment, useEffect, useState} from 'react'
-import { Link } from 'react-router-dom';
+import React, {Fragment, useEffect, useState, useContext} from 'react'
+import { Link, useNavigate } from 'react-router-dom';
 import Producto from './Producto';
 import clientesAxios from '../../config/axios';
 import Spinner from '../layout/Spinner'
+import { CRMContext } from '../../context/CRMcontext'
 
 function Productos() {
 
     const [productos, guardarProductos] = useState([]);
+    const [auth, guardarAuth] = useContext(CRMContext)
+
+    const navigate = useNavigate();
 
     useEffect( () => {
-        const consultarAPI = async () => {
-            const productoConsulta = await clientesAxios.get('/productos')
-            guardarProductos(productoConsulta.data)
+        if(auth.token !== '') {
+            const consultarAPI = async () => {
+                try {
+                    const productoConsulta = await clientesAxios.get('/productos', {
+                        headers: {
+                            Authorization: `Bearer ${auth.token}`
+                        }
+                    })
+                    
+                    guardarProductos(productoConsulta.data)
+                } catch (error) {
+                    if(error.response.status = 500) {
+                        navigate('/iniciar-sesion');
+                    }
+                }
+            }
+
+            consultarAPI()
+        } else {
+            navigate('/iniciar-sesion');
         }
-        consultarAPI()
+
     }, [productos])
 
-    if(!productos.length) return <Spinner/>
+    if(!auth.auth) {
+        return navigate('/iniciar-sesion');
+    }
+
+    // if(!productos.length) return <Spinner/>
 
     return(
         <Fragment>

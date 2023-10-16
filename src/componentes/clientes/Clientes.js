@@ -1,21 +1,50 @@
-import React, { useEffect, useState, Fragment } from 'react'
+import React, { useEffect, useState, Fragment, useContext } from 'react'
 import clienteAxios from '../../config/axios'
 import Cliente from './Cliente'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import Spinner from '../layout/Spinner'
+//Importar context
+import { CRMContext } from '../../context/CRMcontext'
 
 function Clientes() {
     const [clientes, guardarClientes] = useState([])
 
+    const navigate = useNavigate();
+
+    //utilizar valores del context
+    const [auth, guardarAuth] = useContext(CRMContext)
 
 
     useEffect( () => {
-        const consultarAPI = async () => {
-            const clientesConsulta = await clienteAxios.get('/clientes')
-            guardarClientes(clientesConsulta.data)
+        if(auth.token !== '') {
+            const consultarAPI = async () => {
+                
+                try {
+
+                    const clientesConsulta = await clienteAxios.get('/clientes', {
+                        headers: {
+                            Authorization: `Bearer ${auth.token}`
+                        }
+                    })
+
+                    guardarClientes(clientesConsulta.data)
+
+                } catch (error) {
+                    if(error.response.status = 500) {
+                        navigate('/iniciar-sesion');
+                    }
+                }
+            }
+            consultarAPI()
+        }else {
+            navigate('/iniciar-sesion');
         }
-        consultarAPI()
+
     },[clientes])
+
+    if(!auth.auth) {
+        return navigate('/iniciar-sesion');
+    }
 
     if(!clientes.length) return <Spinner/>
 

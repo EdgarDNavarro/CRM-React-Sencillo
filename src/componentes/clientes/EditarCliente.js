@@ -1,9 +1,9 @@
-import React, {Fragment, useEffect, useState} from 'react'
+import React, {Fragment, useEffect, useState, useContext} from 'react'
 import Swal from 'sweetalert2'
 import { useNavigate } from 'react-router-dom';
 import clientesAxios from '../../config/axios'
 import { useParams } from 'react-router-dom';
-
+import { CRMContext } from '../../context/CRMcontext'
 
 function EditarCliente(props) {
     const {id} = useParams();
@@ -14,18 +14,34 @@ function EditarCliente(props) {
         telefono: '', 
         empresa: ''
     })
-    
+    const [auth, guardarAuth] = useContext(CRMContext)
     const navigate = useNavigate();
-
-    //Query a la api
-    const consultarAPI = async () => {
-        const clienteConsulta = await clientesAxios.get(`/clientes/${id}`)
-        datosCliente(clienteConsulta.data)
-    }
 
     //useEffect
     useEffect( () => {
-        consultarAPI()
+        if(auth.token !== '') {
+            //Query a la api
+            const consultarAPI = async () => {
+
+                try {
+                    const clienteConsulta = await clientesAxios.get(`/clientes/${id}`, {
+                        headers: {
+                            Authorization: `Bearer ${auth.token}`
+                        }
+                    })
+                    datosCliente(clienteConsulta.data)
+                } catch (error) {
+                    if(error.response.status = 500) {
+                        navigate('/iniciar-sesion');
+                    }
+                }
+            }
+
+            consultarAPI()
+        } else {
+            navigate('/iniciar-sesion');
+        }
+
     }, [])
 
     //leer los datos del formulario
@@ -42,7 +58,11 @@ function EditarCliente(props) {
     const actualizarCliente = e => {
         e.preventDefault()
 
-        clientesAxios.put(`/clientes/${cliente._id}`, cliente).then(res => {
+        clientesAxios.put(`/clientes/${cliente._id}`, cliente, {
+            headers: {
+                Authorization: `Bearer ${auth.token}`
+            }
+        }).then(res => {
             if(res.data.code === 11000) {
                 Swal.fire({
                     icon: 'error',

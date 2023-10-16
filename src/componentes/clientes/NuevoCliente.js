@@ -1,8 +1,8 @@
-import React, {Fragment, useState} from 'react'
+import React, {Fragment, useState, useContext} from 'react'
 import Swal from 'sweetalert2'
 import { useNavigate } from 'react-router-dom';
 import clientesAxios from '../../config/axios'
-
+import { CRMContext } from '../../context/CRMcontext'
 
 function NuevoCliente() {
     const [cliente, guardarCliente] = useState({
@@ -12,7 +12,7 @@ function NuevoCliente() {
         telefono: '', 
         empresa: ''
     })
-    
+    const [auth, guardarAuth] = useContext(CRMContext)
     const navigate = useNavigate();
 
     //leer los datos del formulario
@@ -26,27 +26,38 @@ function NuevoCliente() {
         })
     }
     const agregarCliente = e => {
-        e.preventDefault();
 
-        clientesAxios.post('/clientes', cliente).then(res =>{
-            //Validar si hay errores de Mongo
-            if(res.data.code === 11000) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Hubo un error',
-                    text: 'Ese cliente ya esta registrado'
-                })
-            }else {
-                Swal.fire(
-                    'Se agregó el Cliente',
-                    res.data.mensaje,
-                    'success'
-                )
+
+        try {
+            e.preventDefault();
+            clientesAxios.post('/clientes', cliente, {
+                    headers: {
+                        Authorization: `Bearer ${auth.token}`
+                    }
+                }).then(res =>{
+                //Validar si hay errores de Mongo
+                if(res.data.code === 11000) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Hubo un error',
+                        text: 'Ese cliente ya esta registrado'
+                    })
+                }else {
+                    Swal.fire(
+                        'Se agregó el Cliente',
+                        res.data.mensaje,
+                        'success'
+                    )
+                }
+
+                navigate('/');
+            })
+        } catch (error) {
+            if(error.response.status = 500) {
+                navigate('/iniciar-sesion');
             }
+        }
 
-            navigate('/');
-
-        })
     }
 
     const validarCliente = () => {
@@ -56,6 +67,9 @@ function NuevoCliente() {
 
         return valido
         //Revisar que las propiedades tengan contenido
+    }
+    if(!auth.auth || (localStorage.getItem('token') !== auth.token)) {
+        navigate('/');
     }
 
     return(

@@ -1,8 +1,8 @@
-import React, {Fragment, useState} from 'react'
+import React, {Fragment, useState, useContext} from 'react'
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
 import clientesAxios from '../../config/axios';
-
+import { CRMContext } from '../../context/CRMcontext'
 
 function NuevoProducto() {
 
@@ -10,6 +10,8 @@ function NuevoProducto() {
         nombre: '',
         precio: ''
     })
+
+    const [auth, guardarAuth] = useContext(CRMContext)
 
     const [archivo, guardarArchivo] = useState('')
 
@@ -27,7 +29,8 @@ function NuevoProducto() {
         try {
             const res = await clientesAxios.post('/productos', formData, {
                 headers: {
-                    'Content-Type' : 'multipart/form-data'
+                    'Content-Type' : 'multipart/form-data',
+                    Authorization: `Bearer ${auth.token}`
                 }
             });
             
@@ -66,7 +69,9 @@ function NuevoProducto() {
         let valido = !nombre.length || !precio.length
         return valido
     }
-
+    if(!auth.auth || (localStorage.getItem('token') !== auth.token)) {
+        navigate('/');
+    }
     return(
         <Fragment>
             <h2>Nuevo Producto</h2>
