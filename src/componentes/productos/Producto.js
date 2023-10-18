@@ -44,7 +44,7 @@ function Producto({producto}) {
                 <p className="nombre">{nombre}</p>
                 <p className="precio">${precio} </p>
                 { imagen ? (
-                    <img className='img' src={`http://localhost:5000/${imagen}`} alt='imagen producto'/>
+                    <img className='img' src={`${process.env.REACT_APP_BACKEND_URL}/${imagen}`} alt='imagen producto'/>
                 ) : null }
                 
             </div>
@@ -56,7 +56,7 @@ function Producto({producto}) {
 
                 <button type="button" className="btn btn-rojo btn-eliminar" onClick={() => eliminarProducto(_id)}>
                     <i className="fas fa-times"></i>
-                    Eliminar Cliente
+                    Eliminar Producto
                 </button>
             </div>
         </li>

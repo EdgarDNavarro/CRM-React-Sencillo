@@ -44,12 +44,11 @@ function NuevoPedido() {
 
     const buscarProductos = async e => {
         e.preventDefault()
-
         const resultadoBusqueda = await clientesAxios.post(`/productos/busqueda/${busqueda}`, {
-                        headers: {
-                            Authorization: `Bearer ${auth.token}`
-                        }
-                    })
+            headers: {
+                Authorization: `Bearer ${auth.token}`
+            }
+        })
 
         if(resultadoBusqueda.data[0]) {
 

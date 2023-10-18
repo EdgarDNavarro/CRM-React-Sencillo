@@ -1,10 +1,11 @@
-import React, {useState, useEffect, Fragment} from 'react'
+import React, {useState, useEffect, Fragment, useContext} from 'react'
 import { useParams } from 'react-router-dom';
 import clientesAxios from '../../config/axios';
 import FormBuscarProducto from './FormBuscarProducto';
 import FormCantidadProducto from './FormCantidadProducto';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
+import { CRMContext } from '../../context/CRMcontext';
 
 function EditarPedidos() {
     const {id, idCliente} = useParams();
@@ -14,49 +15,82 @@ function EditarPedidos() {
     const [productos, guardarProductos] = useState([])
     const [total, guardarTotal] = useState(0)
     const [pedido, guardarPedido] = useState({})
+    const [auth, guardarAuth] = useContext(CRMContext)
 
     const navigate = useNavigate();
 
     useEffect( () => {
-        const consultarPedidoAPI = async () => {
-            const resultado = await clientesAxios.get(`/pedidos/${id}`)
+        if(auth.token !== '') {
+            const consultarPedidoAPI = async () => {
+
+                try {
+                    
+                    const resultado = await clientesAxios.get(`/pedidos/${id}`, {
+                        headers: {
+                            Authorization: `Bearer ${auth.token}`
+                        }
+                    })
+                    
+                    guardarPedido(resultado.data)
+
+                    const resultadoProductos = resultado.data.pedido
+
+                    const productosDelPedido = resultadoProductos.map(objeto => ({
+                        ...objeto.producto,
+                        producto: objeto._id,
+                        cantidad: objeto.cantidad,
+                    }));
+
+                    guardarProductos(productosDelPedido);
+
+                } catch (error) {
+                    if(error.response.status = 500) {
+                        navigate('/iniciar-sesion');
+                    }
+                }
+
+            }
+
+            const consultarClienteAPI = async () => {
+
+                try {
+                    const resultado1 = await clientesAxios.get(`/clientes/${idCliente}`, {
+                        headers: {
+                            Authorization: `Bearer ${auth.token}`
+                        }
+                    })
+                    guardarCliente(resultado1.data)
+                } catch (error) {
+                    if(error.response.status = 500) {
+                        navigate('/iniciar-sesion');
+                    }
+                }
+
+                
+
+            }
             
-            guardarPedido(resultado.data)
+            actualizarTotal()
+            consultarClienteAPI()
+            
+            consultarPedidoAPI()
 
-            const resultadoProductos = resultado.data.pedido
-
-            const productosDelPedido = resultadoProductos.map(objeto => ({
-                ...objeto.producto,
-                producto: objeto._id,
-                cantidad: objeto.cantidad,
-            }));
-
-            guardarProductos(productosDelPedido);
-
+        } else {
+            navigate('/iniciar-sesion');
         }
 
-        const consultarClienteAPI = async () => {
-            const resultado1 = await clientesAxios.get(`/clientes/${idCliente}`)
-            guardarCliente(resultado1.data)
-            
 
-        }
-
-
-        
-        actualizarTotal()
-        consultarClienteAPI()
-        
-        consultarPedidoAPI()
-        
-        
     }, [])
 
 
     const buscarProductos = async e => {
         e.preventDefault()
 
-        const resultadoBusqueda = await clientesAxios.post(`/productos/busqueda/${busqueda}`)
+        const resultadoBusqueda = await clientesAxios.post(`/productos/busqueda/${busqueda}`, {
+            headers: {
+                Authorization: `Bearer ${auth.token}`
+            }
+        })
 
         if(resultadoBusqueda.data[0]) {
 
@@ -133,7 +167,11 @@ function EditarPedidos() {
             total : total
         }
         try {
-            const resultado = await clientesAxios.put(`/pedidos/${id}`, pedido)
+            const resultado = await clientesAxios.put(`/pedidos/${id}`, pedido, {
+            headers: {
+                Authorization: `Bearer ${auth.token}`
+            }
+        })
             if(resultado.status === 200){
                 Swal.fire({
                     icon: 'success',

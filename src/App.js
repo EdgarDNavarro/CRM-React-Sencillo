@@ -27,7 +27,7 @@ import { CRMContext, CRMProvider } from './context/CRMcontext';
 function App() {
     //Utilizar context
     const [auth, guardarAuth] = useContext(CRMContext)
-
+    console.log(process.env.REACT_APP_BACKEND_URL)
     return (
         <Router>
             <Fragment>

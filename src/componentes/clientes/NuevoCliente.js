@@ -26,38 +26,38 @@ function NuevoCliente() {
         })
     }
     const agregarCliente = e => {
-
-
+        e.preventDefault();
+        
         try {
-            e.preventDefault();
-            clientesAxios.post('/clientes', cliente, {
-                    headers: {
-                        Authorization: `Bearer ${auth.token}`
-                    }
-                }).then(res =>{
-                //Validar si hay errores de Mongo
-                if(res.data.code === 11000) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Hubo un error',
-                        text: 'Ese cliente ya esta registrado'
-                    })
-                }else {
-                    Swal.fire(
-                        'Se agregó el Cliente',
-                        res.data.mensaje,
-                        'success'
-                    )
-                }
-
-                navigate('/');
-            })
+            
         } catch (error) {
             if(error.response.status = 500) {
                 navigate('/iniciar-sesion');
             }
         }
 
+        clientesAxios.post('/clientes', cliente, {
+                headers: {
+                    Authorization: `Bearer ${auth.token}`
+                }
+            }).then(res =>{
+            //Validar si hay errores de Mongo
+            if(res.data.code === 11000) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Hubo un error',
+                    text: 'Ese cliente ya esta registrado'
+                })
+            }else {
+                Swal.fire(
+                    'Se agregó el Cliente',
+                    res.data.mensaje,
+                    'success'
+                )
+            }
+
+            navigate('/');
+        })
     }
 
     const validarCliente = () => {

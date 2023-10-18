@@ -32,12 +32,21 @@ function Login() {
             )
             navigate('/');
         } catch (error) {
-            console.log(error)
-            Swal.fire({
-                icon: 'error',
-                text: 'Hubo un error',
-                title: error.response.data.mensaje
-            })
+            // console.log(error)
+            if(error.response) {
+                Swal.fire({
+                    icon: 'error',
+                    text: 'Hubo un error',
+                    title: error.response.data.mensaje
+                })
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    text: 'Hubo un error',
+                    title: 'Hubo un Error'
+                })
+            }
+
         }
     }
 
@@ -58,7 +67,7 @@ function Login() {
 
                     <div className='campo'>
                         <label>Email</label>
-                        <input type='text' name='email' placeholder='Email para Iniciar Sesion' required onChange={leerDatos}/>
+                        <input type='email' name='email' placeholder='Email para Iniciar Sesion' required onChange={leerDatos}/>
                     </div>
 
                     <div className='campo'>

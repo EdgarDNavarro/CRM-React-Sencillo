@@ -38,19 +38,20 @@ function DetallesPedidos({pedido}) {
 
     return(
         <li className="pedido">
-
+            
             <div className="info-pedido">
+
                 <p className="id">ID: {pedido._id}</p>
-                <p className="nombre">Cliente: {cliente.nombre} {cliente.apellido} </p>
+                <p className="nombre">Cliente: {cliente ? cliente.nombre : 'No se ha encontrado ese Cliente'} {cliente ? cliente.apellido : null} </p>
 
                 <div className="articulos-pedido">
                     <p className="productos">Artículos Pedido: </p>
                     <ul>
                         {pedido.pedido.map(articulos => (
-                            <li key={pedido._id+articulos.producto._id}>
-                                <p>{articulos.producto.nombre}</p>
-                                <p>Precio: ${articulos.producto.precio}</p>
-                                <p>Cantidad: {articulos.cantidad}</p>
+                            <li key={articulos.producto ? pedido._id+articulos.producto._id : pedido._id+pedido._id}>
+                                <p>{articulos.producto ? articulos.producto.nombre : 'Producto no encontrado'}</p>
+                                <p>Precio: ${articulos.producto ? articulos.producto.precio : 'Por favor, realizar el pedido nuevamente'}</p>
+                                <p>Cantidad: {articulos.producto ? articulos.cantidad : null}</p>
                             </li>
                         ))}
                     </ul>
@@ -61,10 +62,14 @@ function DetallesPedidos({pedido}) {
             </div>
 
             <div className="acciones">
-                <Link to={`/pedidos/editar/${pedido._id}/${cliente._id}`} className="btn btn-azul">
-                    <i className="fas fa-pen-alt"></i>
-                    Editar Pedido
-                </Link>
+                
+                {cliente ? (
+                    <Link to={`/pedidos/editar/${pedido._id}/${cliente._id}`} className="btn btn-azul">
+                        <i className="fas fa-pen-alt"></i>
+                        Editar Pedido
+                    </Link>
+                ) : null}
+
 
                 <button type="button" className="btn btn-rojo btn-eliminar" onClick={() => eliminarPedido(pedido._id)}>
                     <i className="fas fa-times"></i>
